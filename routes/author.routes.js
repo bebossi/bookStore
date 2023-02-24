@@ -8,56 +8,118 @@ authorRouter.post("/", async (req, res) => {
     const newAuthor = await AuthorModel.create({ ...req.body });
 
     return res.status(201).json(newAuthor);
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    console.log(error);
+    if (error.name === "ValidationError") {
+      const message = Object.values(error.errors).map((value) => value.message);
+      return res.status(400).json({
+        error: message,
+      });
+    }
+
+    if (error.code === 11000) {
+      return res.status(400).json(error.message);
+    }
+
+    return res.status(500).json(error.message);
   }
 });
 
 authorRouter.get("/", async (req, res) => {
   try {
-    const allAuthors = await AuthorModel.find();
+    const allAuthors = await AuthorModel.find(); 
 
     return res.status(200).json(allAuthors);
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    console.log(error);
+    if (error.name === "ValidationError") {
+      const message = Object.values(error.errors).map((value) => value.message);
+      return res.status(400).json({
+        error: message,
+      });
+    }
+
+    if (error.code === 11000) {
+      return res.status(400).json(error.message);
+    }
+
+    return res.status(500).json(error.message);
   }
 });
 
-authorRouter.get("/:id", async (req, res) => {
+authorRouter.get("/:authorId", async (req, res) => {
   try {
-    let { id } = req.params;
+    let { authorId } = req.params;
 
-    const author = await AuthorModel.findById(id);
+    const author = await AuthorModel.findById(authorId).populate("books");
 
     return res.status(200).json(author);
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    console.log(error);
+    if (error.name === "ValidationError") {
+      const message = Object.values(error.errors).map((value) => value.message);
+      return res.status(400).json({
+        error: message,
+      });
+    }
+
+    if (error.code === 11000) {
+      return res.status(400).json(error.message);
+    }
+
+    return res.status(500).json(error.message);
   }
 });
 
-authorRouter.put("/:id", async (req, res) => {
+authorRouter.put("/:authorId", async (req, res) => {
   try {
-    let { id } = req.params;
+    let { authorId } = req.params;
 
-    const updatedAuthor = await AuthorModel.findByIdAndUpdate(id, {...req.body}, {new: true})
+    const updatedAuthor = await AuthorModel.findByIdAndUpdate(authorId, {...req.body}, {new: true, runValidators: true})
 
     return res.status(200).json(updatedAuthor)
 
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    console.log(error);
+    if (error.name === "ValidationError") {
+      const message = Object.values(error.errors).map((value) => value.message);
+      return res.status(400).json({
+        error: message,
+      });
+    }
+
+    if (error.code === 11000) {
+      return res.status(400).json(error.message);
+    }
+
+    return res.status(500).json(error.message);
   }
 });
 
-authorRouter.delete("/:id", async (req, res) => {
+authorRouter.delete("/:authorId", async (req, res) => {
   try {
-    let { id } = req.params;
+    let { authorId } = req.params;
 
-    await AuthorModel.findByIdAndDelete(id)
+    await AuthorModel.findByIdAndDelete(authorId)
+
+    await AuthorModel.updateMany({author: authorId}, {author: "63f8f4b2c0ce64c8f1adc41f"})
 
     return res.status(200).json({message: "Author deleted"})
 
-  } catch (err) {
-    console.log(err);
+  }catch (error) {
+    console.log(error);
+    if (error.name === "ValidationError") {
+      const message = Object.values(error.errors).map((value) => value.message);
+      return res.status(400).json({
+        error: message,
+      });
+    }
+
+    if (error.code === 11000) {
+      return res.status(400).json(error.message);
+    }
+
+    return res.status(500).json(error.message);
   }
 });
 

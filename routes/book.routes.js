@@ -1,82 +1,138 @@
 import express from "express";
+import { AuthorModel } from "../models/author.model.js";
 import { BookModel } from "../models/book.model.js";
 
 const bookRouter = express.Router()
 
-bookRouter.post("/", async (req, res) => {
+bookRouter.post("/:authorId", async (req, res) => {
     try{
+        const {authorId} = req.params
         const newbook = await BookModel.create({...req.body})
+
+        await AuthorModel.findOneAndUpdate(
+            {_id: authorId},
+            {$push:{ books: newbook._id}},
+            {new: true, runValidators: true}
+            )
 
         return res.status(201).json(newbook)
 
-    } catch(err){
-        console.log(err)
-    }
+    }catch (error) {
+        console.log(error);
+        if (error.name === "ValidationError") {
+          const message = Object.values(error.errors).map((value) => value.message);
+          return res.status(400).json({
+            error: message,
+          });
+        }
+    
+        if (error.code === 11000) {
+          return res.status(400).json(error.message);
+        }
+    
+        return res.status(500).json(error.message);
+      }
 })
 
 bookRouter.get("/", async (req, res) => {
     try{
-        const books = await BookModel.find().populate("author")
+        const books = await BookModel.find()
 
         return res.status(200).json(books)
 
-
-    } catch(err){
-        console.log(err)
-    }
+    } catch (error) {
+        console.log(error);
+        if (error.name === "ValidationError") {
+          const message = Object.values(error.errors).map((value) => value.message);
+          return res.status(400).json({
+            error: message,
+          });
+        }
+    
+        if (error.code === 11000) {
+          return res.status(400).json(error.message);
+        }
+    
+        return res.status(500).json(error.message);
+      }
 })
 
-bookRouter.get("/:id", async (req, res) => {
+bookRouter.get("/:bookId", async (req, res) => {
     try{
-        let { id } = req.params
+        let { bookId } = req.params
 
-        const book = await BookModel.findById(id).populate("author")
+        const book = await BookModel.findById(bookId).populate("author")
 
         return res.status(200).json(book)
 
-    } catch(err){
-        console.log(err)
-    }
+    } catch (error) {
+        console.log(error);
+        if (error.name === "ValidationError") {
+          const message = Object.values(error.errors).map((value) => value.message);
+          return res.status(400).json({
+            error: message,
+          });
+        }
+    
+        if (error.code === 11000) {
+          return res.status(400).json(error.message);
+        }
+    
+        return res.status(500).json(error.message);
+      }
 })
 
-bookRouter.put("/:id", async (req, res) => {
+bookRouter.put("/:bookId", async (req, res) => {
     try{
-        let { id } = req.params
+        let { bookId } = req.params
 
-        const updatedbook = await BookModel.findByIdAndUpdate(id, {...req.body}, {new: true})
+        const updatedbook = await BookModel.findByIdAndUpdate(bookId, {...req.body}, {new: true})
 
         return res.status(200).json(updatedbook)
 
-    } catch(err){
-        console.log(err)
-    }
+    } catch (error) {
+        console.log(error);
+        if (error.name === "ValidationError") {
+          const message = Object.values(error.errors).map((value) => value.message);
+          return res.status(400).json({
+            error: message,
+          });
+        }
+    
+        if (error.code === 11000) {
+          return res.status(400).json(error.message);
+        }
+    
+        return res.status(500).json(error.message);
+      }
 })
 
-bookRouter.delete("/:id", async (req, res) => {
+bookRouter.delete("/:bookId", async (req, res) => {
     try{
-        let { id } = req.params
+        const { bookId } = req.params
 
-        const deletedBook = await BookModel.findByIdAndDelete(id)
+        const deletedBook = await BookModel.findByIdAndDelete(bookId);
+
+        await AuthorModel.findOneAndUpdate({books: bookId },{ $pull: {books: bookId} },{runValidators: true})
 
         res.status(200).json({message: " deleted book"})
 
-    } catch(err){
-        console.log(err)
-    }
+    } catch (error) {
+        console.log(error);
+        if (error.name === "ValidationError") {
+          const message = Object.values(error.errors).map((value) => value.message);
+          return res.status(400).json({
+            error: message,
+          });
+        }
+    
+        if (error.code === 11000) {
+          return res.status(400).json(error.message);
+        }
+    
+        return res.status(500).json(error.message);
+      }
 })
 
-bookRouter.get("/:publisher" , async(req, res) => {
-    try{
-        const publisher = req.query
-
-        BookModel.find({"publisher": publisher})
-
-          return res.status(200).send(BookModel)
-        
-
-    } catch(err) {
-        console.log(err)
-    }
-})
 
 export { bookRouter }
